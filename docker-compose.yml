@@ -1,0 +1,17 @@
+version: '3'
+services:
+
+  redis:  
+    image: redis
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  pyopenid-proxy:  
+    image: pyopenid-proxy:dev
+    build: .
+    container_name: pyopenid-proxy
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env.local

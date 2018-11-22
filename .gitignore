@@ -1,0 +1,10 @@
+.env*
+!.env.local.example
+.venv/
+.pytest_cache/
+.pyc
+*.iml
+.directory
+.idea
+__pycache__
+routes.yaml
