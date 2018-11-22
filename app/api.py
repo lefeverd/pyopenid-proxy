@@ -48,6 +48,8 @@ def me():
         session_id = session[settings.SESSION_ID]
         _logger.debug("Found session_id in session")
         token = server_session.get(session_id)
+        if not token:
+            abort(401)
         _logger.debug("Found session in sessions list")
         # access token can be decoded with audience = actual audience
         # id token can be decoded with audience = client id
