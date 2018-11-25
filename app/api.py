@@ -1,5 +1,7 @@
 from flask import jsonify, abort, session, redirect, request
+import base64
 import uuid
+import json
 import logging
 import requests
 from six.moves.urllib.parse import urlencode
@@ -83,22 +85,51 @@ def proxy(path):
     """
     Special route used to proxy requests defined in the routes.yaml configuration file.
     """
-    print(f"Proxying {path}")
+    _logger.debug(f"Proxying {path}")
     route = proxy_routes.get(request.endpoint)
     if not route:
         _logger.error(f"No route configuration could be found for path {path}")
         return jsonify({}), 500
     _logger.debug(f"Using proxy route {route.name} to {route.upstream}")
 
-    headers = dict(request.headers.to_list())
+    headers = dict(request.headers.to_wsgi_list())
+    sanitize_headers(headers)
+    headers.update(get_session_data_headers())
+
+    response = requests.request(
+        request.method.lower(), f"{route.upstream}/{path}", headers=headers
+    )
+    return jsonify(response.json()), response.status_code
+
+
+def sanitize_headers(headers):
+    """
+    Authorization and X-Userinfo headers are added based on the server-side session.
+    Be sure to remove them from the original request if present.
+    """
+    auth_header = headers.pop("Authorization", None)
+    if auth_header:
+        _logger.warning(
+            f"Possible fraud: Authorization header was set to {auth_header}"
+        )
+    userinfo_header = headers.pop("X-Userinfo", None)
+    if userinfo_header:
+        _logger.warning(
+            f"Possible fraud: X-Userinfo header was set to {userinfo_header}"
+        )
+
+
+def get_session_data_headers():
+    headers = {}
     session_data = get_session_data_or_none()
     if session_data:
         access_token = session_data.get("access_token")
+        headers["Authorization"] = f"Bearer {access_token}"
+
         id_token = session_data.get("id_token")
         id_token_data = decode_token(id_token, settings.OAUTH_CLIENT_ID)
-        headers["Authorization"] = f"Bearer {access_token}"
-        headers["X-Userinfo"] = id_token_data
+        headers["X-Userinfo"] = base64.b64encode(json.dumps(id_token_data).encode())
         _logger.debug("Added Authorization header")
-
-    response = requests.request(request.method.lower(), f"{route.upstream}/{path}")
-    return jsonify(response.json()), response.status_code
+    else:
+        _logger.debug("No session_data found.")
+    return headers

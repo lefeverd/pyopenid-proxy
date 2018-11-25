@@ -27,7 +27,7 @@
             "type": "python",
             "request": "launch",
             "module": "pytest",
-            "envFile": "${workspaceFolder}/.env.local",
+            "envFile": "${workspaceFolder}/.env.tests",
             "console": "integratedTerminal",
             "debugStdLib": true, // Otherwise breakpoints in libs won’t work
             "args": [
@@ -41,13 +41,13 @@
             "type": "python",
             "request": "launch",
             "module": "pytest",
-            "envFile": "${workspaceFolder}/.env.local",
+            "envFile": "${workspaceFolder}/.env.tests",
             "console": "integratedTerminal",
             "debugStdLib": true, // Otherwise breakpoints in libs won’t work
             "args": [
                 "tests/"
                 //"-k",
-                //"test_decode_token_jwks"
+                //"test_proxy_authenticated_headers_removed"
             ]
         },
         {

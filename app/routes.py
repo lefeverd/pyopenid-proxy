@@ -21,6 +21,12 @@ def init_app(app: Flask):
 
 def load_proxy_routes(app):
     _logger.info("Loading proxy routes from configuration")
+    routes = get_routes_from_config_file()
+    for route in routes.get("routes"):
+        load_route(app, route)
+
+
+def get_routes_from_config_file():
     routes_path = Path("routes.yaml")
     if not routes_path.exists():
         _logger.warning("No routes.yaml file found, nothing will be proxied.")
@@ -29,8 +35,7 @@ def load_proxy_routes(app):
     with routes_path.open() as stream:
         try:
             routes = yaml.load(stream)
-            for route in routes.get("routes"):
-                load_route(app, route)
+            return routes
         except yaml.YAMLError as exc:
             print(exc)
 

@@ -17,6 +17,12 @@ _logger = logging.getLogger(__name__)
 
 
 def get_session_data_or_none():
+    """
+    Return the server-side session data or None,
+    based on the client-side session id.
+    Server-side session is a dict containing an access_token, an id_token, and other
+    information.
+    """
     try:
         session_data = server_session.get(session[settings.SESSION_ID])
         return session_data

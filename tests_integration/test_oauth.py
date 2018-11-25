@@ -2,27 +2,11 @@ import math
 import time
 from flask import session, jsonify
 
-from jose import jwt
-
 from app.session import session as server_session
 from app.auth_utils import requires_auth
 from app import settings
 
-from tests.tokens_data import (
-    ACCESS_TOKEN_DATA,
-    ID_TOKEN_DATA,
-    RS256_PRIVATE,
-    RS256_PUBLIC,
-)
-
-
-def create_token(payload, key, headers=None):
-    """
-    Create a token based on the private RS256 test key.
-    It can be decoded using decode_token method from auth_utils.
-    """
-    token = jwt.encode(payload, key, settings.OAUTH_SIGNING_ALGORITHM, headers=headers)
-    return token
+from tests.tokens_data import RS256_PUBLIC, ACCESS_TOKEN, ID_TOKEN
 
 
 class TestOAuth:
@@ -42,20 +26,17 @@ class TestOAuth:
             server_session_data = server_session.get(session.get(settings.SESSION_ID))
 
             # Tokens should match
-            assert server_session_data.get("access_token") == access_token
-            assert server_session_data.get("id_token") == id_token
+            assert server_session_data.get("access_token") == ACCESS_TOKEN
+            assert server_session_data.get("id_token") == ID_TOKEN
             return jsonify({}), 200
-
-        access_token = create_token(ACCESS_TOKEN_DATA, RS256_PRIVATE)
-        id_token = create_token(ID_TOKEN_DATA, RS256_PRIVATE)
 
         def get_tokens():
             expiration_seconds = 24 * 3600
             return {
-                "access_token": access_token,
+                "access_token": ACCESS_TOKEN,
                 "expires_at": math.floor(time.time()) + expiration_seconds,
                 "expires_in": expiration_seconds,
-                "id_token": id_token,
+                "id_token": ID_TOKEN,
                 "scope": "openid profile",
                 "token_type": "Bearer",
             }
@@ -97,16 +78,13 @@ class TestOAuth:
         def test_authenticated():
             return jsonify({}), 200
 
-        access_token = create_token(ACCESS_TOKEN_DATA, RS256_PRIVATE)
-        id_token = create_token(ID_TOKEN_DATA, RS256_PRIVATE)
-
         def get_tokens():
             expiration_seconds = 24 * 3600
             return {
-                "access_token": access_token,
+                "access_token": ACCESS_TOKEN,
                 "expires_at": math.floor(time.time()) + expiration_seconds,
                 "expires_in": expiration_seconds,
-                "id_token": id_token,
+                "id_token": ID_TOKEN,
                 "scope": "openid profile",
                 "token_type": "Bearer",
             }
@@ -132,16 +110,13 @@ class TestOAuth:
         def test_authenticated():
             return jsonify({}), 200
 
-        access_token = create_token(ACCESS_TOKEN_DATA, RS256_PRIVATE)
-        id_token = create_token(ID_TOKEN_DATA, RS256_PRIVATE)
-
         def get_tokens():
             expiration_seconds = 2
             return {
-                "access_token": access_token,
+                "access_token": ACCESS_TOKEN,
                 "expires_at": math.floor(time.time()) + expiration_seconds,
                 "expires_in": expiration_seconds,
-                "id_token": id_token,
+                "id_token": ID_TOKEN,
                 "scope": "openid profile",
                 "token_type": "Bearer",
             }

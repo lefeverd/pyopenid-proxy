@@ -1,5 +1,8 @@
 import math
 import time
+from jose import jwt
+
+from app import settings
 
 # Private RSA 256 key
 # Generated using openssl genrsa -out test.rsa 1024
@@ -55,3 +58,16 @@ ID_TOKEN_DATA = {
     "iat": _now,
     "exp": _expiration_epoch,
 }
+
+
+def create_token(payload, key, headers=None):
+    """
+    Create a token based on the given key.
+    It can be decoded using decode_token method from auth_utils.
+    """
+    token = jwt.encode(payload, key, settings.OAUTH_SIGNING_ALGORITHM, headers=headers)
+    return token
+
+
+ACCESS_TOKEN = create_token(ACCESS_TOKEN_DATA, RS256_PRIVATE)
+ID_TOKEN = create_token(ID_TOKEN_DATA, RS256_PRIVATE)
