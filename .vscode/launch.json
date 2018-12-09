@@ -9,6 +9,7 @@
             "type": "python",
             "request": "launch",
             "module": "app",
+            "cwd": "${workspaceRoot}",
             "envFile": "${workspaceFolder}/.env.local",
             "console": "integratedTerminal",
             "debugStdLib": true, // Otherwise breakpoints in libs won’t work
@@ -18,6 +19,7 @@
             "type": "python",
             "request": "launch",
             "module": "app",
+            "cwd": "${workspaceRoot}",
             "envFile": "${workspaceFolder}/.env.local.redis",
             "console": "integratedTerminal",
             "debugStdLib": true, // Otherwise breakpoints in libs won’t work

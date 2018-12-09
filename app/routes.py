@@ -44,4 +44,9 @@ def load_route(app, route):
     proxy_route = ProxyRoute.from_dict(route)
     _logger.debug(f"Adding route {proxy_route}")
     proxy_routes[proxy_route.name] = proxy_route
-    app.add_url_rule(f"{proxy_route.path}/<path:path>", proxy_route.name, api.proxy)
+    app.add_url_rule(
+        f"{proxy_route.path}/<path:path>",
+        proxy_route.name,
+        api.proxy,
+        methods=["GET", "HEAD", "OPTIONS", "POST", "PUT"],
+    )

@@ -96,10 +96,19 @@ def proxy(path):
     sanitize_headers(headers)
     headers.update(get_session_data_headers())
 
+    # Allows CORS, will still be wrapped by flask_cors
+    if request.method in ["OPTIONS", "HEAD"]:
+        return "", 200
+
+    full_path = request.full_path[request.full_path.find(path) :]
     response = requests.request(
-        request.method.lower(), f"{route.upstream}/{path}", headers=headers
+        request.method.lower(),
+        f"{route.upstream}/{full_path}",
+        headers=headers,
+        data=request.data,
     )
-    return jsonify(response.json()), response.status_code
+
+    return (response.content, response.status_code, response.headers.items())
 
 
 def sanitize_headers(headers):

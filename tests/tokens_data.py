@@ -48,8 +48,8 @@ ACCESS_TOKEN_DATA = {
 }
 
 ID_TOKEN_DATA = {
-    "nickname": "lefever.d",
-    "name": "lefever.d@gmail.com",
+    "nickname": "name.lastname",
+    "name": "name.lastname@mailprovider.com",
     "picture": "https://s.gravatar.com/avatar/bc6873f57cb217f19092eed1ba32b6ca?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fle.png",
     "updated_at": "2018-11-11T17:57:10.507Z",
     "iss": "https://simplebookmarks.fakeidp.com/",
