@@ -1,8 +1,7 @@
 import math
 import time
-from jose import jwt
 
-from app import settings
+from app.oauth.utils import create_token
 
 # Private RSA 256 key
 # Generated using openssl genrsa -out test.rsa 1024
@@ -34,6 +33,8 @@ hB9Bpl3kDeaLFIVYxQIDAQAB
 # The tokens data is based on auth0 tokens.
 TOKEN_HEADER = {"typ": "JWT", "alg": "RS256", "kid": "1234"}
 
+AUDIENCE = "12345678987654321"
+
 _now = math.floor(time.time())
 _expiration_epoch = _now + 24 * 3600
 
@@ -54,19 +55,10 @@ ID_TOKEN_DATA = {
     "updated_at": "2018-11-11T17:57:10.507Z",
     "iss": "https://simplebookmarks.fakeidp.com/",
     "sub": "auth0|123456789",
-    "aud": "2TvmetzbRpLI25A1RYvceTMAMerxIjzv",
+    "aud": AUDIENCE,
     "iat": _now,
     "exp": _expiration_epoch,
 }
-
-
-def create_token(payload, key, headers=None):
-    """
-    Create a token based on the given key.
-    It can be decoded using decode_token method from auth_utils.
-    """
-    token = jwt.encode(payload, key, settings.OAUTH_SIGNING_ALGORITHM, headers=headers)
-    return token
 
 
 ACCESS_TOKEN = create_token(ACCESS_TOKEN_DATA, RS256_PRIVATE)

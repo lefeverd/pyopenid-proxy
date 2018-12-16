@@ -6,9 +6,9 @@ import logging
 import requests
 from six.moves.urllib.parse import urlencode
 from app import settings
-from app.oauth import auth0
+from app.oauth import get_client
 from app.session import session as server_session
-from app.auth_utils import decode_token, get_session_data_or_none
+from app.oauth.utils import get_session_data_or_none
 from app.proxy_routes import proxy_routes
 
 DEFAULT_EXPIRATION_SECONDS = 24 * 3600
@@ -20,14 +20,14 @@ def index():
 
 
 def login():
-    return auth0.authorize_redirect(
+    return get_client().authorize_redirect(
         redirect_uri=settings.OAUTH_CALLBACK_URL, audience=settings.OAUTH_AUDIENCE
     )
 
 
 def callback():
     try:
-        tokens = auth0.authorize_access_token()
+        tokens = get_client().authorize_access_token()
         session_uuid = uuid.uuid4().hex
         # Put uuid in client session
         session[settings.SESSION_ID] = session_uuid
@@ -56,7 +56,11 @@ def me():
         # access token can be decoded with audience = actual audience
         # id token can be decoded with audience = client id
         # decoded_access_token = decode_token(access_token, OAUTH_AUDIENCE)
-        decoded_id_token = decode_token(token.get("id_token"), settings.OAUTH_CLIENT_ID)
+
+        # TODO: call get_client to decode token ? Would fix mock client issue.
+        decoded_id_token = get_client().token_decoder.decode_token(
+            token.get("id_token"), audience=settings.OAUTH_CLIENT_ID
+        )
     except KeyError:
         return abort(401)
     return jsonify(decoded_id_token), 200
@@ -78,7 +82,7 @@ def logout():
         pass
     # TODO: pass return URL as param ?
     params = {"returnTo": redirect_url, "client_id": settings.OAUTH_CLIENT_ID}
-    return redirect(auth0.api_base_url + "/v2/logout?" + urlencode(params))
+    return redirect(get_client().api_base_url + "/v2/logout?" + urlencode(params))
 
 
 def proxy(path):
@@ -136,7 +140,9 @@ def get_session_data_headers():
         headers["Authorization"] = f"Bearer {access_token}"
 
         id_token = session_data.get("id_token")
-        id_token_data = decode_token(id_token, settings.OAUTH_CLIENT_ID)
+        id_token_data = get_client().token_decoder.decode_token(
+            id_token, audience=settings.OAUTH_CLIENT_ID
+        )
         headers["X-Userinfo"] = base64.b64encode(json.dumps(id_token_data).encode())
         _logger.debug("Added Authorization header")
     else:

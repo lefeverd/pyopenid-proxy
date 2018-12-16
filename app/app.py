@@ -3,7 +3,7 @@ import logging
 from flask import Flask
 from flask_cors import CORS
 
-from app.oauth import oauth
+from app import oauth
 from app import routes
 from app import settings
 from app import errors

@@ -1,18 +1,19 @@
 from flask import Flask
 import base64
 import json
-import mock
+from unittest.mock import Mock, MagicMock
 from app import api
 from app.proxy_routes import ProxyRoute
-from tests.tokens_data import ACCESS_TOKEN, ID_TOKEN, RS256_PUBLIC, ID_TOKEN_DATA
+from app.oauth.mock_data import ACCESS_TOKEN, ID_TOKEN, RS256_PUBLIC, ID_TOKEN_DATA
 
 
 def _mock_response(status=200, content="CONTENT", json_data=None):
-    mock_resp = mock.Mock()
+    mock_resp = Mock()
     mock_resp.status_code = status
     mock_resp.content = content
+    mock_resp.headers = {}
     if json_data:
-        mock_resp.json = mock.Mock(return_value=json_data)
+        mock_resp.json = Mock(return_value=json_data)
     return mock_resp
 
 
@@ -31,7 +32,7 @@ class TestApiProxy:
 
         # Mock requests to call the following method
         def request(*a, **kw):
-            assert kw.get("url") == "http://127.0.0.1:9999/bla"
+            assert kw.get("url") == "http://127.0.0.1:9999/bla?"
             return _mock_response(json_data={"status": "ok"})
 
         monkeypatch.setattr("requests.sessions.Session.request", request)
@@ -63,7 +64,7 @@ class TestApiProxy:
 
         # Mock requests to call the following method
         def request(*a, **kw):
-            assert kw.get("url") == "http://127.0.0.1:9999/bla"
+            assert kw.get("url") == "http://127.0.0.1:9999/bla?"
             headers = kw.get("headers")
             assert headers.get("Authorization") == f"Bearer {ACCESS_TOKEN}"
             encoded_id_token_data = base64.b64encode(json.dumps(ID_TOKEN_DATA).encode())
@@ -76,8 +77,13 @@ class TestApiProxy:
             return {"access_token": ACCESS_TOKEN, "id_token": ID_TOKEN}
 
         monkeypatch.setattr("app.api.get_session_data_or_none", get_session_data)
+
+        mock_oauth_client = Mock()
+        mock_oauth_client.token_decoder.decode_token = MagicMock(
+            return_value=ID_TOKEN_DATA
+        )
         monkeypatch.setattr(
-            "app.auth_utils.get_key_from_jwks", lambda *args, **kwargs: RS256_PUBLIC
+            "app.api.get_client", MagicMock(return_value=mock_oauth_client)
         )
 
         client = app.test_client()
@@ -108,7 +114,7 @@ class TestApiProxy:
 
         # Mock requests to call the following method
         def request(*a, **kw):
-            assert kw.get("url") == "http://127.0.0.1:9999/bla"
+            assert kw.get("url") == "http://127.0.0.1:9999/bla?"
             headers = kw.get("headers")
             assert "Authorization" not in headers
             assert "X-Userinfo" not in headers
@@ -116,8 +122,12 @@ class TestApiProxy:
 
         monkeypatch.setattr("requests.sessions.Session.request", request)
 
+        mock_oauth_client = Mock()
+        mock_oauth_client.token_decoder.decode_token = MagicMock(
+            return_value=ID_TOKEN_DATA
+        )
         monkeypatch.setattr(
-            "app.auth_utils.get_key_from_jwks", lambda *args, **kwargs: RS256_PUBLIC
+            "app.api.get_client", MagicMock(return_value=mock_oauth_client)
         )
 
         client = app.test_client()

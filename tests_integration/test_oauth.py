@@ -1,12 +1,33 @@
 import math
 import time
 from flask import session, jsonify
+from unittest.mock import Mock, MagicMock
 
+from app.app import create_app
 from app.session import session as server_session
-from app.auth_utils import requires_auth
+from app.oauth.decorators import requires_auth
 from app import settings
 
-from tests.tokens_data import RS256_PUBLIC, ACCESS_TOKEN, ID_TOKEN
+from app.oauth.mock_data import (
+    RS256_PUBLIC,
+    ACCESS_TOKEN,
+    ID_TOKEN,
+    ID_TOKEN_DATA,
+    AUDIENCE,
+)
+
+
+def get_mock_tokens():
+    expiration_seconds = 24 * 3600
+    mock_token = {
+        "access_token": ACCESS_TOKEN,
+        "expires_at": math.floor(time.time()) + expiration_seconds,
+        "expires_in": expiration_seconds,
+        "id_token": ID_TOKEN,
+        "scope": "openid profile",
+        "token_type": "Bearer",
+    }
+    return mock_token
 
 
 class TestOAuth:
@@ -30,24 +51,19 @@ class TestOAuth:
             assert server_session_data.get("id_token") == ID_TOKEN
             return jsonify({}), 200
 
-        def get_tokens():
-            expiration_seconds = 24 * 3600
-            return {
-                "access_token": ACCESS_TOKEN,
-                "expires_at": math.floor(time.time()) + expiration_seconds,
-                "expires_in": expiration_seconds,
-                "id_token": ID_TOKEN,
-                "scope": "openid profile",
-                "token_type": "Bearer",
-            }
+        mock_oauth_client = Mock()
+        mock_oauth_client.authorize_access_token = MagicMock(
+            return_value=get_mock_tokens()
+        )
 
         def get_key(token):
             return RS256_PUBLIC
 
         # Patch the oauth authorize_access_token method that exchanges a code for
         # tokens.
-        monkeypatch.setattr("app.oauth.auth0.authorize_access_token", get_tokens)
-        monkeypatch.setattr("app.auth_utils.get_key_from_jwks", get_key)
+        monkeypatch.setattr(
+            "app.api.get_client", MagicMock(return_value=mock_oauth_client)
+        )
 
         # Call the callback endpoint, which is responsible of exchanging a code for
         # tokens from the OAuth server.
@@ -78,24 +94,21 @@ class TestOAuth:
         def test_authenticated():
             return jsonify({}), 200
 
-        def get_tokens():
-            expiration_seconds = 24 * 3600
-            return {
-                "access_token": ACCESS_TOKEN,
-                "expires_at": math.floor(time.time()) + expiration_seconds,
-                "expires_in": expiration_seconds,
-                "id_token": ID_TOKEN,
-                "scope": "openid profile",
-                "token_type": "Bearer",
-            }
-
         def get_key(token):
             return RS256_PUBLIC
 
         # Patch the oauth authorize_access_token method that exchanges a code for
         # tokens.
-        monkeypatch.setattr("app.oauth.auth0.authorize_access_token", get_tokens)
-        monkeypatch.setattr("app.auth_utils.get_key_from_jwks", get_key)
+        mock_oauth_client = Mock()
+        mock_oauth_client.authorize_access_token = MagicMock(
+            return_value=get_mock_tokens()
+        )
+        monkeypatch.setattr(
+            "app.api.get_client", MagicMock(return_value=mock_oauth_client)
+        )
+        monkeypatch.setattr(
+            "app.oauth.decorators.get_client", MagicMock(return_value=mock_oauth_client)
+        )
 
         # Login, create session
         response = client.get("/callback")
@@ -110,24 +123,22 @@ class TestOAuth:
         def test_authenticated():
             return jsonify({}), 200
 
-        def get_tokens():
-            expiration_seconds = 2
-            return {
-                "access_token": ACCESS_TOKEN,
-                "expires_at": math.floor(time.time()) + expiration_seconds,
-                "expires_in": expiration_seconds,
-                "id_token": ID_TOKEN,
-                "scope": "openid profile",
-                "token_type": "Bearer",
-            }
-
         def get_key(token):
             return RS256_PUBLIC
 
+        mock_tokens = get_mock_tokens()
+        mock_tokens.update({"expires_at": math.floor(time.time()) + 2, "expires_in": 2})
+
         # Patch the oauth authorize_access_token method that exchanges a code for
         # tokens.
-        monkeypatch.setattr("app.oauth.auth0.authorize_access_token", get_tokens)
-        monkeypatch.setattr("app.auth_utils.get_key_from_jwks", get_key)
+        mock_oauth_client = Mock()
+        mock_oauth_client.authorize_access_token = MagicMock(return_value=mock_tokens)
+        monkeypatch.setattr(
+            "app.oauth.decorators.get_client", MagicMock(return_value=mock_oauth_client)
+        )
+        monkeypatch.setattr(
+            "app.api.get_client", MagicMock(return_value=mock_oauth_client)
+        )
 
         # Login, create session
         response = client.get("/callback")
@@ -141,3 +152,24 @@ class TestOAuth:
         response = client.get("/test-authenticated")
         assert response.status_code == 302
         assert response.location == settings.REDIRECT_LOGIN_URL
+
+    def test_mock_oauth(self, monkeypatch):
+        monkeypatch.setattr("app.settings.MOCK_OAUTH", True)
+        # OAUTH_CLIENT_ID is used as audience to decode the id_token
+        monkeypatch.setattr("app.settings.OAUTH_CLIENT_ID", AUDIENCE)
+        app = create_app()
+        with app.test_client() as client:
+            response = client.get("/login")
+            assert response.status_code == 302
+            assert response.location == settings.OAUTH_CALLBACK_URL
+            response = client.get("/callback")
+            assert response.status_code == 302
+            assert response.location == settings.REDIRECT_LOGGED_IN_URL
+            assert "session=" in response.headers.get("Set-Cookie")
+            response = client.get("/me")
+            assert response.status_code == 200
+            assert response.json["iss"] == ID_TOKEN_DATA["iss"]
+            assert response.json["nickname"] == ID_TOKEN_DATA["nickname"]
+            assert response.json["name"] == ID_TOKEN_DATA["name"]
+            assert response.json["sub"] == ID_TOKEN_DATA["sub"]
+            assert response.json["aud"] == ID_TOKEN_DATA["aud"]
