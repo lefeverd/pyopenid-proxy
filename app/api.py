@@ -39,7 +39,9 @@ def callback():
             expire_seconds=tokens.get("expires_in", DEFAULT_EXPIRATION_SECONDS),
         )
         _logger.debug(f"Creating session {session_uuid}")
-        return redirect(settings.REDIRECT_LOGGED_IN_URL)
+        if settings.REDIRECT_LOGGED_IN_URL:
+            return redirect(settings.REDIRECT_LOGGED_IN_URL)
+        return jsonify({}), 200
     except Exception as exc:
         _logger.error(exc)
         return jsonify({}), 401

@@ -1,9 +1,11 @@
+import logging
+
 from authlib.flask.client import OAuth
 
 from app import settings
 from .clients import Auth0Client, MockClient
 
-
+_logger = logging.getLogger(__name__)
 oauth_registry = OAuth()
 
 
@@ -15,8 +17,11 @@ def init_app(app):
     oauth_registry = OAuth()
     oauth_registry.init_app(app)
     if settings.MOCK_OAUTH:
+        _logger.info("MOCK_OAUTH set, using Mock oauth client.")
         oauth_registry.register(settings.OAUTH_CLIENT_NAME, client_cls=MockClient)
     else:
+        if not settings.OAUTH_JWKS_URL:
+            raise Exception("Please set OAUTH_JWKS_URL.")
         oauth_registry.register(
             settings.OAUTH_CLIENT_NAME,
             client_id=settings.OAUTH_CLIENT_ID,

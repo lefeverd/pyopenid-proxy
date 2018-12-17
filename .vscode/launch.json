@@ -25,6 +25,16 @@
             "debugStdLib": true, // Otherwise breakpoints in libs won’t work
         },
         {
+            "name": "Python: Module - mock",
+            "type": "python",
+            "request": "launch",
+            "module": "app",
+            "cwd": "${workspaceRoot}",
+            "envFile": "${workspaceFolder}/.env.local.mock",
+            "console": "integratedTerminal",
+            "debugStdLib": true, // Otherwise breakpoints in libs won’t work
+        },
+        {
             "name": "Python: Integration tests",
             "type": "python",
             "request": "launch",

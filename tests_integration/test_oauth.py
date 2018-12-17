@@ -8,13 +8,7 @@ from app.session import session as server_session
 from app.oauth.decorators import requires_auth
 from app import settings
 
-from app.oauth.mock_data import (
-    RS256_PUBLIC,
-    ACCESS_TOKEN,
-    ID_TOKEN,
-    ID_TOKEN_DATA,
-    AUDIENCE,
-)
+from app.oauth.mock_data import RS256_PUBLIC, ACCESS_TOKEN, ID_TOKEN, ID_TOKEN_DATA
 
 
 def get_mock_tokens():
@@ -155,8 +149,6 @@ class TestOAuth:
 
     def test_mock_oauth(self, monkeypatch):
         monkeypatch.setattr("app.settings.MOCK_OAUTH", True)
-        # OAUTH_CLIENT_ID is used as audience to decode the id_token
-        monkeypatch.setattr("app.settings.OAUTH_CLIENT_ID", AUDIENCE)
         app = create_app()
         with app.test_client() as client:
             response = client.get("/login")

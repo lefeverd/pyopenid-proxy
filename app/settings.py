@@ -6,16 +6,16 @@ try:
     OAUTH_CLIENT_SECRET = os.environ["OAUTH_CLIENT_SECRET"]
     OAUTH_CALLBACK_URL = os.environ["OAUTH_CALLBACK_URL"]
     OAUTH_DOMAIN = os.environ["OAUTH_DOMAIN"]
-    OAUTH_JWKS_URL = os.environ["OAUTH_JWKS_URL"]
     SECRET_KEY = os.environ["SECRET_KEY"]
     REDIRECT_LOGIN_URL = os.environ["REDIRECT_LOGIN_URL"]
-    REDIRECT_LOGGED_IN_URL = os.environ["REDIRECT_LOGGED_IN_URL"]
     REDIRECT_LOGOUT_URL = os.environ["REDIRECT_LOGOUT_URL"]
 except KeyError as exc:
     raise Exception(f"Mandatory parameter {exc} not set.")
 
 # Optional
+OAUTH_JWKS_URL = os.environ.get("OAUTH_JWKS_URL", None)
 OAUTH_SIGNING_ALGORITHM = os.environ.get("OAUTH_SIGNING_ALGORITHM", "RS256")
+REDIRECT_LOGGED_IN_URL = os.environ.get("REDIRECT_LOGGED_IN_URL", None)
 REDIS_HOST = os.environ.get("REDIS_HOST")
 REDIS_PORT = int(os.environ.get("REDIS_PORT", 6379))
 REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD")

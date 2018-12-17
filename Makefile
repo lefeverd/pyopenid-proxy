@@ -6,6 +6,9 @@ init:
 run:
 	PIPENV_DOTENV_LOCATION=.env.local pipenv run python -m app
 
+run-mock:
+	PIPENV_DOTENV_LOCATION=.env.local.mock pipenv run python -m app
+
 run-redis:
 	PIPENV_DOTENV_LOCATION=.env.local.redis pipenv run python -m app
 

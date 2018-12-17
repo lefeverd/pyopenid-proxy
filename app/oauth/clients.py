@@ -1,5 +1,6 @@
 import math
 import time
+import logging
 
 from flask import redirect
 from authlib.flask.client import RemoteApp
@@ -7,8 +8,9 @@ from authlib.client.client import OAuthClient
 
 from app.oauth.mock_data import ACCESS_TOKEN, ID_TOKEN, RS256_PUBLIC
 from app import settings
-
 from .token_decoders import SimpleTokenDecoder, JWKSTokenDecoder
+
+_logger = logging.getLogger(__name__)
 
 
 class MockClient(OAuthClient):
@@ -18,6 +20,8 @@ class MockClient(OAuthClient):
         kwargs.pop("client_id", None)
         if token_decoder:
             self.token_decoder = token_decoder
+        _logger.info("You can call /callback to create the session.")
+        _logger.info("It will return a cookie containing the session ID.")
         super().__init__(*args, **kwargs)
 
     def authorize_redirect(self, redirect_uri=None, **kwargs):

@@ -2,6 +2,7 @@ import math
 import time
 
 from app.oauth.utils import create_token
+from app import settings
 
 # Private RSA 256 key
 # Generated using openssl genrsa -out test.rsa 1024
@@ -33,18 +34,17 @@ hB9Bpl3kDeaLFIVYxQIDAQAB
 # The tokens data is based on auth0 tokens.
 TOKEN_HEADER = {"typ": "JWT", "alg": "RS256", "kid": "1234"}
 
-AUDIENCE = "12345678987654321"
 
 _now = math.floor(time.time())
 _expiration_epoch = _now + 24 * 3600
 
 ACCESS_TOKEN_DATA = {
-    "iss": "https://simplebookmarks.fakeidp.com/",
+    "iss": f"{settings.OAUTH_BASE_URL}/",
     "sub": "auth0|123456789",
-    "aud": ["http://127.0.0.1:3000", "https://simplebookmarks.fakeidp.com/userinfo"],
+    "aud": ["http://127.0.0.1:3000", f"{settings.OAUTH_BASE_URL}/userinfo"],
     "iat": _now,
     "exp": _expiration_epoch,
-    "azp": "2TvmetzbRpLI25A1RYvceTMAMerxIjzv",
+    "azp": settings.OAUTH_CLIENT_ID,  # Authorized party, token to which the token was issued
     "scope": "openid profile",
 }
 
@@ -53,9 +53,9 @@ ID_TOKEN_DATA = {
     "name": "name.lastname@mailprovider.com",
     "picture": "https://s.gravatar.com/avatar/bc6873f57cb217f19092eed1ba32b6ca?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fle.png",
     "updated_at": "2018-11-11T17:57:10.507Z",
-    "iss": "https://simplebookmarks.fakeidp.com/",
+    "iss": f"{settings.OAUTH_BASE_URL}/",
     "sub": "auth0|123456789",
-    "aud": AUDIENCE,
+    "aud": settings.OAUTH_CLIENT_ID,
     "iat": _now,
     "exp": _expiration_epoch,
 }
