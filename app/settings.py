@@ -23,6 +23,7 @@ PORT = int(os.environ.get("PORT", 8080))
 HOST = os.environ.get("HOST", "127.0.0.1")
 DEBUG = os.environ.get("DEBUG", False)
 MOCK_OAUTH = os.environ.get("MOCK_OAUTH", False)
+CORS_ORIGIN = os.environ.get("CORS_ORIGIN", None)
 
 # Computed
 OAUTH_BASE_URL = "https://" + OAUTH_DOMAIN

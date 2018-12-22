@@ -6,6 +6,7 @@ from unittest.mock import Mock, MagicMock
 from app.app import create_app
 from app.session import session as server_session
 from app.oauth.decorators import requires_auth
+from app.oauth.clients import MockClient
 from app import settings
 
 from app.oauth.mock_data import RS256_PUBLIC, ACCESS_TOKEN, ID_TOKEN, ID_TOKEN_DATA
@@ -45,7 +46,8 @@ class TestOAuth:
             assert server_session_data.get("id_token") == ID_TOKEN
             return jsonify({}), 200
 
-        mock_oauth_client = Mock()
+        base_client = MockClient()
+        mock_oauth_client = Mock(wraps=base_client)
         mock_oauth_client.authorize_access_token = MagicMock(
             return_value=get_mock_tokens()
         )
@@ -93,7 +95,8 @@ class TestOAuth:
 
         # Patch the oauth authorize_access_token method that exchanges a code for
         # tokens.
-        mock_oauth_client = Mock()
+        base_client = MockClient()
+        mock_oauth_client = Mock(wraps=base_client)
         mock_oauth_client.authorize_access_token = MagicMock(
             return_value=get_mock_tokens()
         )
@@ -125,7 +128,8 @@ class TestOAuth:
 
         # Patch the oauth authorize_access_token method that exchanges a code for
         # tokens.
-        mock_oauth_client = Mock()
+        base_client = MockClient()
+        mock_oauth_client = Mock(wraps=base_client)
         mock_oauth_client.authorize_access_token = MagicMock(return_value=mock_tokens)
         monkeypatch.setattr(
             "app.oauth.decorators.get_client", MagicMock(return_value=mock_oauth_client)

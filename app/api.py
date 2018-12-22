@@ -1,10 +1,9 @@
-from flask import jsonify, abort, session, redirect, request
+from flask import jsonify, abort, session, request
 import base64
 import uuid
 import json
 import logging
 import requests
-from six.moves.urllib.parse import urlencode
 from app import settings
 from app.oauth import get_client
 from app.session import session as server_session
@@ -20,9 +19,7 @@ def index():
 
 
 def login():
-    return get_client().authorize_redirect(
-        redirect_uri=settings.OAUTH_CALLBACK_URL, audience=settings.OAUTH_AUDIENCE
-    )
+    return get_client().login()
 
 
 def callback():
@@ -39,9 +36,7 @@ def callback():
             expire_seconds=tokens.get("expires_in", DEFAULT_EXPIRATION_SECONDS),
         )
         _logger.debug(f"Creating session {session_uuid}")
-        if settings.REDIRECT_LOGGED_IN_URL:
-            return redirect(settings.REDIRECT_LOGGED_IN_URL)
-        return jsonify({}), 200
+        return get_client().callback()
     except Exception as exc:
         _logger.error(exc)
         return jsonify({}), 401
@@ -59,7 +54,6 @@ def me():
         # id token can be decoded with audience = client id
         # decoded_access_token = decode_token(access_token, OAUTH_AUDIENCE)
 
-        # TODO: call get_client to decode token ? Would fix mock client issue.
         decoded_id_token = get_client().token_decoder.decode_token(
             token.get("id_token"), audience=settings.OAUTH_CLIENT_ID
         )
@@ -71,9 +65,6 @@ def me():
 def logout():
     # Clear client-side session
     session.clear()
-    redirect_url = request.args.get("redirect_url")
-    if not redirect_url:
-        redirect_url = settings.REDIRECT_LOGOUT_URL
     try:
         # Clear server-side session
         session_id = session[settings.SESSION_ID]
@@ -82,9 +73,7 @@ def logout():
         _logger.debug(f"Cleared session {session_id}")
     except Exception:
         pass
-    # TODO: pass return URL as param ?
-    params = {"returnTo": redirect_url, "client_id": settings.OAUTH_CLIENT_ID}
-    return redirect(get_client().api_base_url + "/v2/logout?" + urlencode(params))
+    return get_client().logout()
 
 
 def proxy(path):

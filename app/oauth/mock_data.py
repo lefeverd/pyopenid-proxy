@@ -40,7 +40,7 @@ _expiration_epoch = _now + 24 * 3600
 
 ACCESS_TOKEN_DATA = {
     "iss": f"{settings.OAUTH_BASE_URL}/",
-    "sub": "auth0|123456789",
+    "sub": "idp|123456789",
     "aud": ["http://127.0.0.1:3000", f"{settings.OAUTH_BASE_URL}/userinfo"],
     "iat": _now,
     "exp": _expiration_epoch,
@@ -54,7 +54,7 @@ ID_TOKEN_DATA = {
     "picture": "https://s.gravatar.com/avatar/bc6873f57cb217f19092eed1ba32b6ca?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fle.png",
     "updated_at": "2018-11-11T17:57:10.507Z",
     "iss": f"{settings.OAUTH_BASE_URL}/",
-    "sub": "auth0|123456789",
+    "sub": "idp|123456789",
     "aud": settings.OAUTH_CLIENT_ID,
     "iat": _now,
     "exp": _expiration_epoch,
