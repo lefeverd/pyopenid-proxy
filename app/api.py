@@ -95,12 +95,39 @@ def proxy(path):
     if request.method in ["OPTIONS", "HEAD"]:
         return "", 200
 
+    def get_file_data():
+        file_data = b""
+        chunk_size = 4096
+        while True:
+            chunk = request.stream.read(chunk_size)
+            if len(chunk) == 0:
+                break
+            file_data += chunk
+        return file_data
+
+    # TODO: handle larger file upload with chuncking/streaming ?
+    # use requests data or file ?
+    # def exhaust(stream):
+    #    while True:
+    #        out = stream.read(1024 * 1024)
+    #        if not out:
+    #            break
+    #        yield out
+
+    data = None
+    if request.headers.get("Content-Type", None) and request.headers.get(
+        "Content-Type"
+    ).startswith("multipart/form-data"):
+        data = get_file_data()
+    else:
+        data = request.data
+
     full_path = request.full_path[request.full_path.find(path) :]
     response = requests.request(
         request.method.lower(),
         f"{route.upstream}/{full_path}",
         headers=headers,
-        data=request.data,
+        data=data,
     )
 
     return (response.content, response.status_code, response.headers.items())

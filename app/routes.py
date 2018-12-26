@@ -48,5 +48,5 @@ def load_route(app, route):
         f"{proxy_route.path}/<path:path>",
         proxy_route.name,
         api.proxy,
-        methods=["GET", "HEAD", "OPTIONS", "POST", "PUT"],
+        methods=["GET", "HEAD", "OPTIONS", "POST", "PUT", "DELETE", "PATCH"],
     )
