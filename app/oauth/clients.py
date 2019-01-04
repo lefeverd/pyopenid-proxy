@@ -2,13 +2,18 @@ import abc
 import math
 import time
 import logging
+import uuid
+import urllib
 from six.moves.urllib.parse import urlencode
 
 from flask import redirect, jsonify, request
 from authlib.flask.client import RemoteApp
 from authlib.client.client import OAuthClient
+import requests
 
 from app.oauth.mock_data import ACCESS_TOKEN, ID_TOKEN, RS256_PUBLIC
+from app.session import session as server_session
+from app.session_utils import get_session_data_or_abort
 from app import settings
 from .token_decoders import SimpleTokenDecoder, JWKSTokenDecoder
 
@@ -32,6 +37,10 @@ class BaseClient(abc.ABC, OAuthClient):
     def logout(self):
         pass
 
+    @abc.abstractmethod
+    def delete_user(self):
+        pass
+
 
 class MockClient(BaseClient):
     token_decoder = SimpleTokenDecoder(RS256_PUBLIC)
@@ -50,6 +59,12 @@ class MockClient(BaseClient):
     def logout(self):
         return redirect(settings.REDIRECT_LOGOUT_URL)
 
+    def delete_user(self):
+        _logger.warn(
+            "MockClient delete_user. Returning 200, but cannot delete mock user."
+        )
+        return jsonify({}), 200
+
     def authorize_access_token(self, **kwargs):
         expiration_seconds = 60 * 60 * 24
         return {
@@ -64,6 +79,41 @@ class MockClient(BaseClient):
 
 class Auth0Client(BaseClient, RemoteApp):
     token_decoder = JWKSTokenDecoder(settings.OAUTH_JWKS_URL)
+    management_session_id = None
+
+    def _get_management_token(self):
+        if self.management_session_id:
+            # Get the payload from cache. Might be expired and not exist anymore.
+            payload = server_session.get(self.management_session_id)
+            if payload and "access_token" in payload:
+                return payload["access_token"]
+
+        payload = self._get_management_token_from_remote()
+        access_token = payload.get("access_token", None)
+        if not access_token:
+            raise Exception("Could not find access_token in response")
+
+        expires_in = payload.get("expires_in", None)
+        session_uuid = uuid.uuid4().hex
+        server_session.create_session(session_uuid, payload, expire_seconds=expires_in)
+        self.management_session_id = session_uuid
+        return access_token
+
+    def _get_management_token_from_remote(self):
+        auth_token_url = f"https://{settings.OAUTH_DOMAIN}/oauth/token"
+        auth_headers = {"Content-Type": "application/json"}
+        auth_payload = {
+            "grant_type": "client_credentials",
+            "client_id": settings.AUTH0_MANAGEMENT_CLIENT_ID,
+            "client_secret": settings.AUTH0_MANAGEMENT_CLIENT_SECRET,
+            "audience": f"https://{settings.OAUTH_DOMAIN}/api/v2/",
+        }
+        res = requests.post(auth_token_url, headers=auth_headers, json=auth_payload)
+        if not res or not res.status_code == 200:
+            raise Exception("Could not get management authentication token")
+
+        json_response = res.json()
+        return json_response
 
     def logout(self):
         redirect_url = request.args.get("redirect_url")
@@ -71,3 +121,14 @@ class Auth0Client(BaseClient, RemoteApp):
             redirect_url = settings.REDIRECT_LOGOUT_URL
         params = {"returnTo": redirect_url, "client_id": settings.OAUTH_CLIENT_ID}
         return redirect(self.api_base_url + "/v2/logout?" + urlencode(params))
+
+    def delete_user(self, subject):
+        token = self._get_management_token()
+        management_url = f"https://{settings.OAUTH_DOMAIN}/api/v2"
+        headers = {"Authorization": "Bearer " + token}
+        res = requests.delete(
+            management_url + "/users/" + urllib.parse.quote(subject), headers=headers
+        )
+        if not res or res.status_code >= 400:
+            raise Exception(f"Could not delete user {subject}: {res.status_code}")
+        return True

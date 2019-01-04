@@ -7,8 +7,10 @@ import requests
 from app import settings
 from app.oauth import get_client
 from app.session import session as server_session
+from app.session_utils import get_session_data_or_abort
 from app.oauth.utils import get_session_data_or_none
 from app.proxy_routes import proxy_routes
+from app.errors import AppError, ERROR_DELETE_USER
 
 DEFAULT_EXPIRATION_SECONDS = 24 * 3600
 _logger = logging.getLogger(__name__)
@@ -44,18 +46,13 @@ def callback():
 
 def me():
     try:
-        session_id = session[settings.SESSION_ID]
-        _logger.debug("Found session_id in session")
-        token = server_session.get(session_id)
-        if not token:
-            abort(401)
-        _logger.debug("Found session in sessions list")
+        session_data = get_session_data_or_abort()
         # access token can be decoded with audience = actual audience
         # id token can be decoded with audience = client id
         # decoded_access_token = decode_token(access_token, OAUTH_AUDIENCE)
 
         decoded_id_token = get_client().token_decoder.decode_token(
-            token.get("id_token"), audience=settings.OAUTH_CLIENT_ID
+            session_data.get("id_token"), audience=settings.OAUTH_CLIENT_ID
         )
     except KeyError:
         return abort(401)
@@ -74,6 +71,20 @@ def logout():
     except Exception:
         pass
     return get_client().logout()
+
+
+def delete():
+    session_data = get_session_data_or_abort()
+    decoded_id_token = get_client().token_decoder.decode_token(
+        session_data.get("id_token"), audience=settings.OAUTH_CLIENT_ID
+    )
+    _logger.info(f"Deleting user {decoded_id_token['sub']}")
+    try:
+        get_client().delete_user(decoded_id_token["sub"])
+        return jsonify({"success": "true"}), 200
+    except Exception as e:
+        _logger.error(e)
+        raise AppError(description=e.message)
 
 
 def proxy(path):

@@ -25,6 +25,8 @@ ERROR_JWKS_KEY_NOT_FOUND = {
     "title": "No key could be found in JWKS corresponding to the token's kid.",
 }
 
+ERROR_DELETE_USER = {"status": 500, "code": 5, "title": "Could not delete user"}
+
 
 def init_app(app):
     app.register_error_handler(AppError, AppError.handle)

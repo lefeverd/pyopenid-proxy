@@ -13,6 +13,7 @@ def init_app(app: Flask):
     app.add_url_rule("/", "index", api.index)
     app.add_url_rule("/login", "login", api.login)
     app.add_url_rule("/logout", "logout", api.logout)
+    app.add_url_rule("/delete", "delete", api.delete, methods=["OPTIONS", "POST"])
     app.add_url_rule("/callback", "callback", api.callback)
     app.add_url_rule("/me", "me", api.me)
 
