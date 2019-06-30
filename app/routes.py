@@ -30,8 +30,7 @@ def load_proxy_routes(app):
 def get_routes_from_config_file():
     routes_path = Path("routes.yaml")
     if not routes_path.exists():
-        _logger.warning("No routes.yaml file found, nothing will be proxied.")
-        return
+        raise Exception("No routes.yaml file found, nothing will be proxied.")
 
     with routes_path.open() as stream:
         try:

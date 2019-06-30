@@ -12,7 +12,7 @@
             "cwd": "${workspaceRoot}",
             "envFile": "${workspaceFolder}/.env.local",
             "console": "integratedTerminal",
-            "debugStdLib": true, // Otherwise breakpoints in libs won’t work
+            "justMyCode": false, // Otherwise breakpoints in libs won’t work
         },
         {
             "name": "Python: Module - redis",
@@ -22,7 +22,7 @@
             "cwd": "${workspaceRoot}",
             "envFile": "${workspaceFolder}/.env.local.redis",
             "console": "integratedTerminal",
-            "debugStdLib": true, // Otherwise breakpoints in libs won’t work
+            "justMyCode": false, // Otherwise breakpoints in libs won’t work
         },
         {
             "name": "Python: Module - mock",
@@ -32,7 +32,7 @@
             "cwd": "${workspaceRoot}",
             "envFile": "${workspaceFolder}/.env.local.mock",
             "console": "integratedTerminal",
-            "debugStdLib": true, // Otherwise breakpoints in libs won’t work
+            "justMyCode": false, // Otherwise breakpoints in libs won’t work
         },
         {
             "name": "Python: Integration tests",
@@ -41,7 +41,7 @@
             "module": "pytest",
             "envFile": "${workspaceFolder}/.env.tests",
             "console": "integratedTerminal",
-            "debugStdLib": true, // Otherwise breakpoints in libs won’t work
+            "justMyCode": false, // Otherwise breakpoints in libs won’t work
             "args": [
                 "tests_integration/"
                 //"-k",
@@ -55,7 +55,7 @@
             "module": "pytest",
             "envFile": "${workspaceFolder}/.env.tests",
             "console": "integratedTerminal",
-            "debugStdLib": true, // Otherwise breakpoints in libs won’t work
+            "justMyCode": false, // Otherwise breakpoints in libs won’t work
             "args": [
                 "tests/"
                 //"-k",

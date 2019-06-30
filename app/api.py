@@ -21,6 +21,7 @@ def index():
 
 
 def login():
+    _logger.debug("Login")
     return get_client().login()
 
 
@@ -45,8 +46,10 @@ def callback():
 
 
 def me():
+    _logger.debug("/me, getting session data")
     try:
         session_data = get_session_data_or_abort()
+        _logger.debug("got session data %s, trying to decode", session_data)
         # access token can be decoded with audience = actual audience
         # id token can be decoded with audience = client id
         # decoded_access_token = decode_token(access_token, OAUTH_AUDIENCE)
@@ -54,8 +57,11 @@ def me():
         decoded_id_token = get_client().token_decoder.decode_token(
             session_data.get("id_token"), audience=settings.OAUTH_CLIENT_ID
         )
+        _logger.debug("session data decoded")
     except KeyError:
+        _logger.warn("Could not find session data, aborting")
         return abort(401)
+    _logger.debug("/me, %s", decoded_id_token)
     return jsonify(decoded_id_token), 200
 
 

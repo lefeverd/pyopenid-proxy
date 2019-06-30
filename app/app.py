@@ -40,6 +40,7 @@ def main():
     configure_logging()
     _logger.info("Running application")
     app = create_app()
+    _logger.info("Listening on " + str(settings.HOST) + ":" + str(settings.PORT))
     app.run(host=settings.HOST, port=settings.PORT, use_reloader=False)
 
 

@@ -24,13 +24,22 @@ class BaseClient(abc.ABC, OAuthClient):
     token_decoder = None
 
     def login(self):
+        _logger.debug(
+            "login, redirecting to %s, audience %s",
+            settings.OAUTH_CALLBACK_URL,
+            settings.OAUTH_AUDIENCE,
+        )
         return self.authorize_redirect(
             redirect_uri=settings.OAUTH_CALLBACK_URL, audience=settings.OAUTH_AUDIENCE
         )
 
     def callback(self):
         if settings.REDIRECT_LOGGED_IN_URL:
+            _logger.debug(
+                "callback, redirecting to %s", settings.REDIRECT_LOGGED_IN_URL
+            )
             return redirect(settings.REDIRECT_LOGGED_IN_URL)
+        _logger.debug("callback, no redirect URL set, returning 200")
         return jsonify({}), 200
 
     @abc.abstractmethod
@@ -54,9 +63,13 @@ class MockClient(BaseClient):
         super().__init__(*args, **kwargs)
 
     def authorize_redirect(self, redirect_uri=None, **kwargs):
+        _logger.debug(
+            "authorize_redirect, redirecting to %s", settings.OAUTH_CALLBACK_URL
+        )
         return redirect(settings.OAUTH_CALLBACK_URL)
 
     def logout(self):
+        _logger.debug("logout, redirecting to %s", settings.REDIRECT_LOGOUT_URL)
         return redirect(settings.REDIRECT_LOGOUT_URL)
 
     def delete_user(self):
@@ -67,7 +80,7 @@ class MockClient(BaseClient):
 
     def authorize_access_token(self, **kwargs):
         expiration_seconds = 60 * 60 * 24
-        return {
+        token = {
             "access_token": ACCESS_TOKEN,
             "expires_at": math.floor(time.time()) + expiration_seconds,
             "expires_in": expiration_seconds,
@@ -75,6 +88,8 @@ class MockClient(BaseClient):
             "scope": "openid profile",
             "token_type": "Bearer",
         }
+        _logger.debug("authorize_access_token, values %s", token)
+        return token
 
 
 class Auth0Client(BaseClient, RemoteApp):
@@ -120,9 +135,12 @@ class Auth0Client(BaseClient, RemoteApp):
         if not redirect_url:
             redirect_url = settings.REDIRECT_LOGOUT_URL
         params = {"returnTo": redirect_url, "client_id": settings.OAUTH_CLIENT_ID}
-        return redirect(self.api_base_url + "/v2/logout?" + urlencode(params))
+        redirect_uri = self.api_base_url + "/v2/logout?" + urlencode(params)
+        _logger("logout, redirecting to %s", redirect_uri)
+        return redirect(redirect_url)
 
     def delete_user(self, subject):
+        _logger.debug("delete_user")
         token = self._get_management_token()
         management_url = f"https://{settings.OAUTH_DOMAIN}/api/v2"
         headers = {"Authorization": "Bearer " + token}

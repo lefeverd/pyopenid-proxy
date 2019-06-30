@@ -22,6 +22,7 @@ def init_app(app):
     else:
         if not settings.OAUTH_JWKS_URL:
             raise Exception("Please set OAUTH_JWKS_URL.")
+        _logger.info("Registering Auth0 oauth client")
         oauth_registry.register(
             settings.OAUTH_CLIENT_NAME,
             client_id=settings.OAUTH_CLIENT_ID,
