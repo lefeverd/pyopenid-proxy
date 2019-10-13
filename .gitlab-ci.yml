@@ -1,0 +1,109 @@
+image: docker:stable
+
+stages:
+  - build
+  - test
+  - test-integration
+  - release
+  - cleanup
+
+variables:
+  DOCKER_DRIVER: overlay2
+  DOCKER_HOST: tcp://localhost:2375
+  DOCKER_IMAGE: harbor.horsducommun.be/pyopenid-proxy/proxy
+  DOCKER_IMAGE_TAG: $CI_COMMIT_SHORT_SHA
+
+.docker: &docker
+  services:
+    - docker:18.09.8-dind
+  before_script:
+    - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD harbor.horsducommun.be
+
+build:
+  <<: *docker
+  <<: *only
+  stage: build
+  script:
+    - echo "BUILDING IMAGE $DOCKER_IMAGE:$DOCKER_IMAGE_TAG"
+    - docker build --network host --pull -t $DOCKER_IMAGE:$DOCKER_IMAGE_TAG -f Dockerfile .
+    - docker push $DOCKER_IMAGE:$DOCKER_IMAGE_TAG
+
+test:
+  <<: *docker
+  <<: *only
+  stage: test
+  script:
+    - docker pull $DOCKER_IMAGE:$DOCKER_IMAGE_TAG
+    - >
+      docker run 
+      -e "OAUTH_CLIENT_ID="
+      -e "OAUTH_DOMAIN="
+      -e "OAUTH_CLIENT_SECRET="
+      -e "OAUTH_CALLBACK_URL=http://127.0.0.1:8080/callback"
+      -e "OAUTH_AUDIENCE=http://127.0.0.1:8080"
+      -e "OAUTH_JWKS_URL=https://.../.well-known/jwks.json"
+      -e "OAUTH_SIGNING_ALGORITHM=RS256"
+      -e "SECRET_KEY=ThisIsTheSecretKey"
+      -e "REDIRECT_LOGIN_URL=http://127.0.0.1:8081/login"
+      -e "REDIRECT_LOGGED_IN_URL=http://127.0.0.1:8081/dashboard"
+      -e "REDIRECT_LOGOUT_URL=http://127.0.0.1:8081"
+      -e "HOST=0.0.0.0"
+      -e "PORT=8080"
+      -e "CORS_ORIGIN=http://127.0.0.1:8081,https://127.0.0.1:8081"
+      $DOCKER_IMAGE:$DOCKER_IMAGE_TAG pytest tests
+
+# For the postgres hostname, in kubernetes executor, services are in same pod (different container),
+# see https://gitlab.com/gitlab-org/gitlab-runner/issues/2677#note_67671527
+# The twist here is that we run dind, so
+# DB_HOSTNAME is set to the docker0 interface IP, as we need to access the postgres
+# service from inside the test docker image.
+test-integration:
+  <<: *docker
+  <<: *only
+  services:
+    - docker:18.09.8-dind
+  stage: test-integration
+  script:
+    - docker pull $DOCKER_IMAGE:$DOCKER_IMAGE_TAG
+    - >
+      docker run 
+      -e "OAUTH_CLIENT_ID="
+      -e "OAUTH_DOMAIN="
+      -e "OAUTH_CLIENT_SECRET="
+      -e "OAUTH_CALLBACK_URL=http://127.0.0.1:8080/callback"
+      -e "OAUTH_AUDIENCE=http://127.0.0.1:8080"
+      -e "OAUTH_JWKS_URL=https://.../.well-known/jwks.json"
+      -e "OAUTH_SIGNING_ALGORITHM=RS256"
+      -e "SECRET_KEY=ThisIsTheSecretKey"
+      -e "REDIRECT_LOGIN_URL=http://127.0.0.1:8081/login"
+      -e "REDIRECT_LOGGED_IN_URL=http://127.0.0.1:8081/dashboard"
+      -e "REDIRECT_LOGOUT_URL=http://127.0.0.1:8081"
+      -e "HOST=0.0.0.0"
+      -e "PORT=8080"
+      -e "CORS_ORIGIN=http://127.0.0.1:8081,https://127.0.0.1:8081"
+      $DOCKER_IMAGE:$DOCKER_IMAGE_TAG pytest tests_integration
+
+release:
+  <<: *docker
+  <<: *only
+  stage: release
+  script:
+    - export RELEASE_DATE=`date +%Y%m%d-%H%M%S`
+    - docker pull $DOCKER_IMAGE:$DOCKER_IMAGE_TAG
+    - docker tag "$DOCKER_IMAGE:$DOCKER_IMAGE_TAG" "${DOCKER_IMAGE}:latest"
+    - docker tag "$DOCKER_IMAGE:$DOCKER_IMAGE_TAG" "${DOCKER_IMAGE}:${RELEASE_DATE}-${DOCKER_IMAGE_TAG}"
+    - docker push "${DOCKER_IMAGE}:latest"
+    - docker push "${DOCKER_IMAGE}:${RELEASE_DATE}-${DOCKER_IMAGE_TAG}"
+  only:
+    - master
+
+# We use harbor as the docker registry, mark the test image to be deleted (gc is running periodically).
+cleanup:
+  image: alpine
+  stage: cleanup
+  script:
+    - apk add curl
+    - curl -u $DOCKER_USERNAME:$DOCKER_PASSWORD -XDELETE "https://harbor.horsducommun.be/api/repositories/pyopenid-proxy%2Fproxy/tags/${DOCKER_IMAGE_TAG}"
+  allow_failure: true
+  except:
+    - master

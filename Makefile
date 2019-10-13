@@ -1,17 +1,18 @@
 .PHONY: init run
 
 init:
-	PIPENV_VENV_IN_PROJECT=1 pipenv install --dev
+	python3 -m venv venv
+	./venv/bin/pip install -r requirements.txt
 
 run:
-	PIPENV_DOTENV_LOCATION=.env.local pipenv run python -m app
+	set -a && source .env.local && set +a && ./venv/bin/python -m app
 
 run-mock:
-	PIPENV_DOTENV_LOCATION=.env.local.mock pipenv run python -m app
+	set -a && source .env.local.mock && set +a && ./venv/bin/python -m app
 
 run-redis:
-	PIPENV_DOTENV_LOCATION=.env.local.redis pipenv run python -m app
+	set -a && source .env.local.redis && set +a && ./venv/bin/python -m app
 
 test:
-	PIPENV_DOTENV_LOCATION=.env.tests pipenv run pytest tests/ && \
-	PIPENV_DOTENV_LOCATION=.env.tests pipenv run pytest tests_integration/
+	set -a && source .env.test && set +a && ./venv/bin/pytest tests/
+	set -a && source .env.test && set +a && ./venv/bin/pytest tests_integration/

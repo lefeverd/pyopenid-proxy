@@ -41,7 +41,7 @@ _expiration_epoch = _now + 24 * 3600
 ACCESS_TOKEN_DATA = {
     "iss": f"{settings.OAUTH_BASE_URL}/",
     "sub": "idp|123456789",
-    "aud": ["http://127.0.0.1:3000", f"{settings.OAUTH_BASE_URL}/userinfo"],
+    "aud": ["https://127.0.0.1:8080", f"{settings.OAUTH_BASE_URL}/userinfo"],
     "iat": _now,
     "exp": _expiration_epoch,
     "azp": settings.OAUTH_CLIENT_ID,  # Authorized party, token to which the token was issued

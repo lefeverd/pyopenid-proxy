@@ -39,13 +39,13 @@
             "type": "python",
             "request": "launch",
             "module": "pytest",
-            "envFile": "${workspaceFolder}/.env.tests",
+            "envFile": "${workspaceFolder}/.env.test",
             "console": "integratedTerminal",
             "justMyCode": false, // Otherwise breakpoints in libs won’t work
             "args": [
                 "tests_integration/"
-                //"-k",
-                //"test_proxy_authenticated_headers"
+                "-k",
+                "test_get_requires_auth_with_valid_token"
             ]
         },
         {
@@ -53,7 +53,7 @@
             "type": "python",
             "request": "launch",
             "module": "pytest",
-            "envFile": "${workspaceFolder}/.env.tests",
+            "envFile": "${workspaceFolder}/.env.test",
             "console": "integratedTerminal",
             "justMyCode": false, // Otherwise breakpoints in libs won’t work
             "args": [

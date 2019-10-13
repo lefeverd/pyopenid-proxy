@@ -27,7 +27,7 @@ def get_token_data():
         "iss": "https://simplebookmarks.fakeidp.com/",
         "sub": "auth0|123456789",
         "aud": [
-            "http://127.0.0.1:3000",
+            "https://127.0.0.1:8080",
             "https://simplebookmarks.fakeidp.com/userinfo",
         ],
         "iat": now,
@@ -42,7 +42,7 @@ class TestTokenDecoders:
     def test_simple_token_decoder(self):
         token_decoder = SimpleTokenDecoder(RS256_PUBLIC)
         token = create_token(get_token_data(), RS256_PRIVATE)
-        token_decoder.decode_token(token, audience="http://127.0.0.1:3000")
+        token_decoder.decode_token(token, audience="https://127.0.0.1:8080")
         assert True
 
     def test_decode_token_bad_audience(self, monkeypatch):
@@ -63,7 +63,7 @@ class TestTokenDecoders:
         token = create_token(token_data, RS256_PRIVATE)
 
         with pytest.raises(AppError) as exc:
-            token_decoder.decode_token(token, audience="http://127.0.0.1:3000")
+            token_decoder.decode_token(token, audience="https://127.0.0.1:8080")
 
         assert exc.value.status == 401
         assert exc.value.code == 1
@@ -80,7 +80,7 @@ hB9Bpl3kDeaLFIVYxQIDFAKE
         token = create_token(get_token_data(), RS256_PRIVATE)
 
         with pytest.raises(AppError) as exc:
-            token_decoder.decode_token(token, audience="http://127.0.0.1:3000")
+            token_decoder.decode_token(token, audience="https://127.0.0.1:8080")
 
         assert exc.value.status == 401
         assert exc.value.code == 3
@@ -95,5 +95,5 @@ hB9Bpl3kDeaLFIVYxQIDFAKE
         token_decoder = JWKSTokenDecoder("https://fake-jwks-url")
         token_decoder.get_key_from_jwks = MagicMock(return_value=public_jwk)
 
-        token_decoder.decode_token(token, audience="http://127.0.0.1:3000")
+        token_decoder.decode_token(token, audience="https://127.0.0.1:8080")
         assert True
