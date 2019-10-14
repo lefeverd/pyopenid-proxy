@@ -12,6 +12,7 @@ variables:
   DOCKER_HOST: tcp://localhost:2375
   DOCKER_IMAGE: harbor.horsducommun.be/pyopenid-proxy/proxy
   DOCKER_IMAGE_TAG: $CI_COMMIT_SHORT_SHA
+  #SHARED_PATH: /builds/shared/$CI_PROJECT_PATH
 
 .docker: &docker
   services:
@@ -35,10 +36,10 @@ test:
     - >
       docker run 
       -e "OAUTH_CLIENT_ID="
-      -e "OAUTH_DOMAIN="
+      -e "OAUTH_DOMAIN=simplebookmarks.fakeidp.com"
       -e "OAUTH_CLIENT_SECRET="
       -e "OAUTH_CALLBACK_URL=http://127.0.0.1:8080/callback"
-      -e "OAUTH_AUDIENCE=http://127.0.0.1:8080"
+      -e "OAUTH_AUDIENCE=https://127.0.0.1:8080"
       -e "OAUTH_JWKS_URL=https://.../.well-known/jwks.json"
       -e "OAUTH_SIGNING_ALGORITHM=RS256"
       -e "SECRET_KEY=ThisIsTheSecretKey"
@@ -65,10 +66,10 @@ test-integration:
     - >
       docker run 
       -e "OAUTH_CLIENT_ID="
-      -e "OAUTH_DOMAIN="
+      -e "OAUTH_DOMAIN=simplebookmarks.fakeidp.com"
       -e "OAUTH_CLIENT_SECRET="
       -e "OAUTH_CALLBACK_URL=http://127.0.0.1:8080/callback"
-      -e "OAUTH_AUDIENCE=http://127.0.0.1:8080"
+      -e "OAUTH_AUDIENCE=https://127.0.0.1:8080"
       -e "OAUTH_JWKS_URL=https://.../.well-known/jwks.json"
       -e "OAUTH_SIGNING_ALGORITHM=RS256"
       -e "SECRET_KEY=ThisIsTheSecretKey"
@@ -78,6 +79,7 @@ test-integration:
       -e "HOST=0.0.0.0"
       -e "PORT=8080"
       -e "CORS_ORIGIN=http://127.0.0.1:8081,https://127.0.0.1:8081"
+      -v "$(pwd)/routes.test.yaml/app/routes.yaml"
       $DOCKER_IMAGE:$DOCKER_IMAGE_TAG pytest tests_integration
 
 release:
