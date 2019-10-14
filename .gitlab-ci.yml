@@ -79,7 +79,7 @@ test-integration:
       -e "HOST=0.0.0.0"
       -e "PORT=8080"
       -e "CORS_ORIGIN=http://127.0.0.1:8081,https://127.0.0.1:8081"
-      -v "$(pwd)/routes.test.yaml/app/routes.yaml"
+      -v "$(pwd)/routes.test.yaml:/app/routes.yaml"
       $DOCKER_IMAGE:$DOCKER_IMAGE_TAG pytest tests_integration
 
 release:
