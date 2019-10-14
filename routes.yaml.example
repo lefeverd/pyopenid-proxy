@@ -2,3 +2,6 @@ routes:
   - name: your-api
     path: /api
     upstream: http://api-url:8080
+  - name: test
+    path: /test
+    upstream: https://www.google.be
