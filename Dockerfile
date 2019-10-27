@@ -6,6 +6,7 @@ COPY ./app /app/app
 COPY ./tests /app/tests
 COPY ./tests_integration /app/tests_integration
 COPY requirements.txt /app/
+COPY ./wsgi.py ./wsgi.py
 
 RUN apt-get update \
     && apt-get install -y gcc libffi-dev \
@@ -13,6 +14,7 @@ RUN apt-get update \
     && pip install -r requirements.txt \
     && apt-get purge -y --auto-remove gcc
 
-CMD ["/bin/bash", "-c", "python -m app"]
+
+CMD gunicorn -b 0.0.0.0:8080 --reload wsgi:app
 
 EXPOSE 8080
