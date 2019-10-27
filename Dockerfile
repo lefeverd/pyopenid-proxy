@@ -8,7 +8,7 @@ COPY ./tests_integration /app/tests_integration
 COPY requirements.txt /app/
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends gcc \
+    && apt-get install -y gcc \
     && rm -rf /var/lib/apt/lists/* \
     && pip install -r requirements.txt \
     && apt-get purge -y --auto-remove gcc
