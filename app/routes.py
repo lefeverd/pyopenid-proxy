@@ -42,7 +42,7 @@ def get_routes_from_config_file():
 
 def load_route(app, route):
     proxy_route = ProxyRoute.from_dict(route)
-    _logger.debug(f"Adding route {proxy_route}")
+    _logger.info(f"Adding route {proxy_route}")
     proxy_routes[proxy_route.name] = proxy_route
     app.add_url_rule(
         f"{proxy_route.path}/<path:path>",

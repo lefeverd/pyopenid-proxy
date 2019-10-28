@@ -11,6 +11,7 @@
         - [Locally](#locally)
         - [Docker](#docker)
         - [Tests](#tests)
+    - [WSGI](#wsgi)
     - [OpenID/OAuth providers](#openidoauth-providers)
     - [Notes](#notes)
 
@@ -114,6 +115,16 @@ To run the tests, execute:
 
 ```bash
 make test
+```
+
+## WSGI
+
+By default, the Docker image uses gunicorn to serve the application.  
+The logging is thus setup to use gunicorn handler, and you can specify the level
+directly with gunicorn:
+
+```
+set -a && source .env.test && set +a && ./venv/bin/gunicorn -b 0.0.0.0:8080 --reload wsgi:app --log-level debug
 ```
 
 ## OpenID/OAuth providers

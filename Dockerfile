@@ -15,6 +15,6 @@ RUN apt-get update \
     && apt-get purge -y --auto-remove gcc
 
 
-CMD gunicorn -b 0.0.0.0:8080 --reload wsgi:app
+CMD gunicorn -b 0.0.0.0:8080 --reload wsgi:app --log-level info
 
 EXPOSE 8080
