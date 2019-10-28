@@ -136,7 +136,7 @@ class Auth0Client(BaseClient, RemoteApp):
             redirect_url = settings.REDIRECT_LOGOUT_URL
         params = {"returnTo": redirect_url, "client_id": settings.OAUTH_CLIENT_ID}
         redirect_uri = self.api_base_url + "/v2/logout?" + urlencode(params)
-        _logger("logout, redirecting to %s", redirect_uri)
+        _logger.debug("logout, redirecting to %s", redirect_uri)
         return redirect(redirect_url)
 
     def delete_user(self, subject):

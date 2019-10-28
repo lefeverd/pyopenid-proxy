@@ -40,6 +40,8 @@ def create_app(logger_override=None):
 
     if settings.CORS_ORIGIN:
         cors_origins = settings.CORS_ORIGIN.split(",")
+        if not isinstance(cors_origins, (list, tuple)):
+            cors_origins = [cors_origins]
         CORS(app, supports_credentials=True, origins=cors_origins)
 
     oauth.init_app(app)
