@@ -30,7 +30,7 @@ API's.
 
 It's inspired by this great talk from Jacob Ideskog: [https://www.youtube.com/watch?v=BdKmZ7mPNns&feature=youtu.be&t=901](https://www.youtube.com/watch?v=BdKmZ7mPNns&feature=youtu.be&t=901).  
 As he explains, it allows to have this proxy in front of our "internal" services, creating a session
-for the users with an opaque token, and translating it to pass the JWT token (and ID token) to the
+for the users with an opaque token, and translating it to pass the JWT (and ID token) to the
 internal services.  
 
 ## Endpoints
