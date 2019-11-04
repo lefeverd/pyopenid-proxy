@@ -9,6 +9,7 @@
         - [Redis](#redis)
     - [Development](#development)
         - [Locally](#locally)
+        - [Mock client](#mock-client)
         - [Docker](#docker)
         - [Tests](#tests)
     - [WSGI](#wsgi)
@@ -26,6 +27,11 @@ to deal with the same OAuth problematics every time.
 
 The application acts as a gateway between the client applications (frontends) and the
 API's.  
+
+It's inspired by this great talk from Jacob Ideskog: [https://www.youtube.com/watch?v=BdKmZ7mPNns&feature=youtu.be&t=901](https://www.youtube.com/watch?v=BdKmZ7mPNns&feature=youtu.be&t=901).  
+As he explains, it allows to have this proxy in front of our "internal" services, creating a session
+for the users with an opaque token, and translating it to pass the JWT token (and ID token) to the
+internal services.  
 
 ## Endpoints
 
@@ -100,6 +106,16 @@ To run the application locally, execute:
 make init
 make run
 ```
+
+### Mock client
+
+You can use, in the .env.local file:
+
+```bash
+MOCK_OAUTH=1
+```
+
+To use the Mock OAuth client, which simply always authorize the requests and return a mock token.
 
 ### Docker
 
